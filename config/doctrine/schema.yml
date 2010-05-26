@@ -1,16 +1,45 @@
-Profile:
+# sfFacebookGraphPlugin
+# Profile class
+
+sfFacebookGraphUserProfile:
   columns:
     user_id:
       type: integer
       primary: true
-    first_name: varchar(20)
-    last_name: varchar(20)
+    full_name: varchar(255)
+    first_name: varchar(100)
+    last_name: varchar(100)
+    user_set_name:
+      type: boolean
+      default: false
+      notnull: true
     facebook_uid: integer(20)
-    email: varchar(255)
-    email_hash: varchar(255)
+    access_token: varchar(255)
+    email:
+      type: varchar(255)
+      unique: true
+    user_set_email:
+      type: boolean
+      default: false
+      notnull: true
+    facebook_only_account:
+      type: boolean
+      default: false
+      notnull: true
   relations:
     sfGuardUser:
       foreignType: one
+      foreignAlias: Profile
       local: user_id
       foreign: id
       onDelete: CASCADE
+
+<?php if (sfConfig::get('app_facebook_modify_sf_guard_user', false)): ?>
+sfGuardUser:
+  columns:
+    username:
+      type: string(150)
+    email_address:
+      unique: false
+      notnull: false
+<?php endif; ?>

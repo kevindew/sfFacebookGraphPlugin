@@ -1,0 +1,5 @@
+#ajaxSignin:
+#  is_secure: false
+
+signin:
+  is_secure: false

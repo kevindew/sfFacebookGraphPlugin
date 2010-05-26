@@ -12,11 +12,11 @@
 
 class sfFacebookGraphUser extends sfGuardSecurityUser
 {
+
   /**
+   * Gets the facebook user id of the logged in user
    *
-   * @return integer
-   * @author fabriceb
-   * @since May 27, 2009 fabriceb
+   * @return int|null   A very large int probably
    */
   public function getCurrentFacebookUid()
   {
@@ -35,23 +35,36 @@ class sfFacebookGraphUser extends sfGuardSecurityUser
     return null;
   }
 
+  /**
+   * Checks whether a user is currently connected to facebook
+   *
+   * @return bool
+   */
   public function isFacebookConnected()
   {
 
     return !is_null($this->getCurrentFacebookUid());
   }
 
-//  /**
-//   * Gets information about the user
-//   *
-//   * @param array $fields
-//   * @return array
-//   */
-//  public function getInfos($fields)
-//  {
-//    $userInfo = sfFacebookGraph::getFacebookPlatform()
-//                               ->users_getInfo(array($this->getCurrentFacebookUid()),$fields);
-//
-//    return reset($userInfos);
-//  }
+  /**
+   * Gets information about the user
+   *
+   * @param array $fields
+   * @return array
+   */
+  public function getFacebookInfo()
+  {
+    $facebookUid = $this->getCurrentFacebookUid();
+
+    $userInfo = null;
+
+    if ($facebookUid) {
+      try {
+        $userInfo = sfFacebookGraph::getCurrentUserInfo();
+
+      } catch (Exception $e) {}
+    }
+
+    return $userInfo;
+  }
 }

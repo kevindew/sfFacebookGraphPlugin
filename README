@@ -1,0 +1,49 @@
+--------------------------------------------------------------------------------
+sfFacebookGraphPlugin
+By Kevin Dew <kev@dewsolutions.co.uk>
+--------------------------------------------------------------------------------
+
+This plugin is to allow the integration of Facebook with sfDoctrineGuardPlugin
+using the Facebook graph API.
+
+This plugin helps a developer allow users to login with their Facebook accounts.
+It is designed to support both normal accounts and Facebook Accounts. It also
+aids accessing the Facebook Graph API
+
+It is heavily based on sfFacebookConnectPlugin by Fabrice Bernhard. I began
+working on forking this plugin to support the Graph API but too much
+backwards compatibility would have been lost.
+
+This plugin is less flexible than sfFacebookConnect. It is for developing
+web applications outside of Facebook, and doesn't have canvas support (This is
+because this does not appear in the Graph API)
+
+It is also requires Doctrine and is not currently compatible with Propel Apps.
+It is has been developed only on Symfony 1.4 in a rush so probably has bugs.
+
+Installation
+------------
+
+
+  * Install the plugin via putting the repo in your plugins directory and
+    activating it by adding $this->enablePlugins('sfFacebookGraphPlugin'); to
+    the setup() method of your ProjectConfiguration class
+
+  * Create an application on Facebook http://www.facebook.com/developers/
+
+
+  * Modify your app.yml files to override the plugins config (must override
+    the application id/secret/key)
+        
+  * Enable the sfFacebookGraphAuth module
+
+  * Alter the myUser class to extend sfFacebookGraphUser
+
+  * Add the filter to your filters.yml above security (and remember me if thats
+    used)
+        facebook_login:
+          class: sfFacebookGraphLoginStatusFilter
+          
+  * Clear symfony cache and build all and load
+
+  * To test things out enable the sfFacebookGraphDemo and go to /facebook/demo

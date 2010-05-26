@@ -1,0 +1,17 @@
+sfFacebookGraphSignin:
+  url:  /facebook/signin
+  param:
+    module: sfFacebookGraphAuth
+    action: signin
+
+sfFacebookGraphDemo:
+  url:  /facebook/demo
+  param:
+    module: sfFacebookGraphDemo
+    action: index
+
+#sfFacebookGraphAjaxSignin:
+#  url:  /facebook/ajax-signin
+#  param:
+#    module: sfFacebookGraphAuth
+#    action: ajaxSignin

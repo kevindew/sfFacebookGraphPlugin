@@ -13,7 +13,7 @@ class sfFacebookGraph
 
   /**
    * The facebook platform object
-   * @static  Facebook|null
+   * @var  Facebook|null
    */
   static protected $_facebookPlatform = null;
 
@@ -80,11 +80,76 @@ class sfFacebookGraph
 
       self::$_facebookPlatform = new Facebook(array(
         'appId'  => self::getApiKey(),
-        'secret' => self::getApiSecret(),
+        'secret' => self::getAppSecret(),
         'cookie' => true
       ));
     }
 
     return self::$_facebookPlatform;
+  }
+
+  /**
+   * Get the current Facebook user id
+   *
+   * @return  int|null
+   */
+  static public function getCurrentUser()
+  {
+    return self::getFacebookPlatform()->getUser();
+  }
+
+  /**
+   * Get current access token
+   *
+   * @return  string|null
+   */
+  static public function getCurrentAccessToken()
+  {
+    $session = self::getFacebookPlatform()->getSession();
+
+    if (isset($session['access_token'])) {
+      return $session['access_token'];
+    }
+
+    return null;
+  }
+
+  /**
+   * Get current access expiry timestamp
+   *
+   * @return  int|null
+   */
+  static public function getCurrentAccessExpiry()
+  {
+    $session = self::getFacebookPlatform()->getSession();
+
+    if (isset($session['expires'])) {
+      return (int) $session['expires'];
+    }
+
+    return null;
+  }
+
+  /**
+   * Gets the user information (available to this app) for the currently logged
+   * in facebook user
+   *
+   * @throws  facebookApiException
+   * @return  array
+   */
+  static public function getCurrentUserInfo()
+  {
+    return self::getFacebookPlatform()->api('/me');
+  }
+
+  /**
+   * Check an email address to see if it's facebook proxymail account
+   * 
+   * @param   string  $email
+   * @return  bool
+   */
+  static public function checkProxyEmail($email)
+  {
+    return preg_match('/(.*)@proxymail.facebook.com/i', $email);
   }
 }
