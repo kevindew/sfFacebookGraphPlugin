@@ -7,18 +7,13 @@ sfFacebookGraphUserProfile:
       type: integer
       primary: true
     full_name: varchar(255)
-    first_name: varchar(100)
-    last_name: varchar(100)
     user_set_name:
       type: boolean
       default: false
       notnull: true
     facebook_uid: integer(20)
     access_token: varchar(255)
-    email:
-      type: varchar(255)
-      unique: true
-    user_set_email:
+    user_set_email_address:
       type: boolean
       default: false
       notnull: true
@@ -28,6 +23,7 @@ sfFacebookGraphUserProfile:
       notnull: true
   relations:
     sfGuardUser:
+      alias: User
       foreignType: one
       foreignAlias: Profile
       local: user_id
@@ -38,8 +34,16 @@ sfFacebookGraphUserProfile:
 sfGuardUser:
   columns:
     username:
-      type: string(150)
+      type: string(255)
     email_address:
-      unique: false
+      unique: true
       notnull: false
+  relations:
+    sfFacebookGraphUserProfile:
+      alias: Profile
+      foreignType: one
+      foreignAlias: User
+      local: id
+      foreign: user_id
+      onDelete: CASCADE
 <?php endif; ?>
