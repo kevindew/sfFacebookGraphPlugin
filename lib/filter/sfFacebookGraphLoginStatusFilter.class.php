@@ -15,12 +15,18 @@ class sfFacebookGraphLoginStatusFilter extends sfFilter
    */
   public function execute($filterChain)
   {
-    $facebookUser = sfFacebookGraph::getCurrentUser();
+    $facebookUid = sfFacebookGraph::getCurrentUser();
+    $user = $this->context->getUser();
 
-    if ($facebookUser && !$this->context->getUser()->isFacebookConnected()) {
-      sfFacebookGraphUserProfile::getCurrentFacebookUser(
-        $this->context->getUser()
-      );
+    // check for logged in user
+    if ($facebookUid && !$user->isFacebookConnected()) {
+      sfFacebookGraphUserProfile::getCurrentFacebookUser($user);
+    }
+
+    // check for logged out
+    if ($user->isFacebookAuthenticated()
+      && !$user->isFacebookConnected()) {
+      $user->signOut();
     }
 
     $filterChain->execute();
