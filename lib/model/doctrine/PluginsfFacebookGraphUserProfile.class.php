@@ -47,7 +47,8 @@ extends BasesfFacebookGraphUserProfile
           $facebookUid,
           $accessToken,
           $accessTokenExpiry,
-          $facebookUserInfo
+          $facebookUserInfo,
+          $sfGuardUser
         );
 
       $connection->commit();
@@ -93,7 +94,8 @@ extends BasesfFacebookGraphUserProfile
         $user->getProfile()->_facebookUpdateProfile(
           $accessToken,
           $accessTokenExpiry,
-          $facebookUserInfo
+          $facebookUserInfo,
+          $user->getGuardUser()
         );
 
       } else if($user->getProfile()->getFacebookUid() === null) {
@@ -105,7 +107,8 @@ extends BasesfFacebookGraphUserProfile
             $facebookUid,
             $accessToken,
             $accessTokenExpiry,
-            $facebookUserInfo
+            $facebookUserInfo,
+            $user->getGuardUser()
           );
 
       } else {
@@ -123,7 +126,7 @@ extends BasesfFacebookGraphUserProfile
       $userObj = self::getUserByFacebookUid($facebookUid);
 
       if ($userObj) {
-        $user->signIn($userObj);
+        $user->signIn($userObj, false, null, true);
       }
     }
 
@@ -153,9 +156,10 @@ extends BasesfFacebookGraphUserProfile
             $facebookUid,
             $accessToken,
             $accessTokenExpiry,
-            $facebookUserInfo
+            $facebookUserInfo,
+            $userObj
           );
-        $user->signIn($userObj);
+        $user->signIn($userObj, false, null, true);
       }
     }
 
@@ -167,7 +171,8 @@ extends BasesfFacebookGraphUserProfile
           $facebookUid,
           $accessToken,
           $accessTokenExpiry,
-          $facebookUserInfo)
+          $facebookUserInfo
+        ), false, null, true
         );
 
       } catch (Exception $e) {
@@ -219,11 +224,15 @@ extends BasesfFacebookGraphUserProfile
    */
   static public function getUserByEmail($email)
   {
+    if (!$email) {
+      return false;
+    }
+
     return Doctrine::getTable('sfGuardUser')
                    ->createQuery('u')
-                   ->innerJoin('u.Profile p')
+                   ->leftJoin('u.Profile p')
                    ->where(
-                     'p.email = ?', $email
+                     'u.email_address = ?', $email
                    )
                    ->fetchOne();
   }
@@ -231,23 +240,25 @@ extends BasesfFacebookGraphUserProfile
   /**
    * Connect a user profile to a facebook account
    *
-   * @param   int     $facebookUid
-   * @param   string  $accessToken
-   * @param   int     $accessTokenExpiry
-   * @param   array   $facebookUserInfo
+   * @param   int         $facebookUid
+   * @param   string      $accessToken
+   * @param   int         $accessTokenExpiry
+   * @param   array       $facebookUserInfo
+   * @param   sfGuardUser $user
    * @return  self
    */
   protected function _connectToFacebook(
     $facebookUid,
     $accessToken,
     $accessTokenExpiry,
-    array $facebookUserInfo
+    array $facebookUserInfo,
+    sfGuardUser $user
   )
   {
     $this
       ->setFacebookUid($facebookUid)
       ->_facebookUpdateProfile(
-        $accessToken, $accessTokenExpiry, $facebookUserInfo
+        $accessToken, $accessTokenExpiry, $facebookUserInfo, $user
       );
 
     return $this;
@@ -256,18 +267,19 @@ extends BasesfFacebookGraphUserProfile
   /**
    * Update facebook details
    *
-   * @param   string  $accessToken
-   * @param   int     $accessTokenExpiry
-   * @param   array   $facebookUserInfo
+   * @param   string      $accessToken
+   * @param   int         $accessTokenExpiry
+   * @param   array       $facebookUserInfo
+   * @param   sfGuardUser $user
    * @return  self
    */
   protected function _facebookUpdateProfile(
-    $accessToken, $accessTokenExpiry, array $facebookUserInfo
+    $accessToken, $accessTokenExpiry, array $facebookUserInfo, sfGuardUser $user
   )
   {
     $this
       ->setActiveAccessToken($accessToken, $accessTokenExpiry)
-      ->mergeFacebookInfo($facebookUserInfo)
+      ->mergeFacebookInfo($facebookUserInfo, $user)
       ->save();
 
     return $this;
@@ -292,10 +304,11 @@ extends BasesfFacebookGraphUserProfile
    * Merge a users data with that from Facebook, updating fields where
    * appropriate
    *
-   * @param   array $facebookUserInfo
+   * @param   array       $facebookUserInfo
+   * @param   sfGuardUser $user
    * @return  self
    */
-  public function mergeFacebookInfo(array $facebookUserInfo)
+  public function mergeFacebookInfo(array $facebookUserInfo, sfGuardUser $user)
   {
     if (!$this->getUserSetName()) {
 
@@ -305,18 +318,18 @@ extends BasesfFacebookGraphUserProfile
       }
 
       if (isset($facebookUserInfo['first_name'])
-      && $this->getFirstName() != $facebookUserInfo['first_name']) {
-        $this->setFirstName($facebookUserInfo['first_name']);
+      && $user->getFirstName() != $facebookUserInfo['first_name']) {
+        $user->setFirstName($facebookUserInfo['first_name']);
       }
 
       if (isset($facebookUserInfo['last_name'])
-      && $this->getLastName() != $facebookUserInfo['last_name']) {
-        $this->setLastName($facebookUserInfo['last_name']);
+      && $user->getLastName() != $facebookUserInfo['last_name']) {
+        $user->setLastName($facebookUserInfo['last_name']);
       }
 
     }
 
-    if (!$this->getUserSetEmail()) {
+    if (!$this->getUserSetEmailAddress()) {
       $email = isset($facebookUserInfo['email'])
         ? $facebookUserInfo['email']
         : '';
@@ -327,11 +340,9 @@ extends BasesfFacebookGraphUserProfile
         }
       }
 
-      if ($email != $this->getEmail()) {
-        $this->setEmail($email);
+      if ($email != $user->getEmailAddress()) {
+        $user->setEmailAddress($email);
       }
-
-
     }
 
     return $this;
