@@ -1,10 +1,10 @@
-all:
+default:
   facebook:
     api_key: XXX
     app_secret: XXX
     app_id: XXX
     app_cookie: true                  # whether to use cookies (needed to be true
-                                      # as far as i'm aware
+                                      # as far as i'm aware)
     app_cookie_domain: ~
     connect_signin_url: 'sfFacebookGraphAuth/signin'
     redirect_on_no_session: true      # whether to perform a redirect (in
