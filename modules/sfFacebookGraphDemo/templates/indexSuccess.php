@@ -9,7 +9,6 @@
     <?php include_metas() ?>
     <?php include_title() ?>
     <link rel="shortcut icon" href="/favicon.ico" />
-
     <?php include_stylesheets() ?>
     <?php include_javascripts() ?>
   </head>
@@ -25,8 +24,6 @@
       You are not currently logged in
       <fb:login-button length="long"<?php include_facebook_permissions() ?>></fb:login-button>
     <?php endif; ?>
-
-
     <?php include_facebook_inline_loader() ?>
   </body>
 </html>
