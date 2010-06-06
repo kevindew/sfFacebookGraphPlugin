@@ -150,6 +150,18 @@ extends BasesfFacebookGraphUserProfile
       }
 
       if ($userObj) {
+
+        if (!$userObj->getProfile()) {
+          // profile is null
+          $profileClass = sfConfig::get(
+            'app_facebook_profile_class',
+            'sfFacebookGraphUserProfile'
+          );
+          $profile = new $profileClass();
+          $profile->setUser($userObj);
+          $userObj->setProfile($profile);
+        }
+
         $userObj
           ->getProfile()
           ->_connectToFacebook(
