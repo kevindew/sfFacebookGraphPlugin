@@ -20,3 +20,4 @@ default:
     base_perms: ~                     # default permissions to request of facebook
     js_status: true                   # whether to check status of Javascript
     js_xfbml: true                    # whether to parse xfbml in javascript
+    profile_class: sfFacebookGraphUserProfile
