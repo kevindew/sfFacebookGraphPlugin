@@ -6,13 +6,10 @@
 <div id="fb-root"></div>
 <?php include_facebook_javascripts($locale) ?>
 <?php javascript_tag(); ?>
-    <?php include_partial('sfFacebookGraphAuth/inlineLoaderLogin', array(
-      'signInUrl' => $signInUrl,
-      'noSessionUrl' => $noSessionUrl,
-      'redirectOnNoSession' => $redirectOnNoSession,
-      'apiKey' => $apiKey,
-      'jsStatus' => $jsStatus,
-      'jsCookie' => $jsCookie,
-      'jsXfbml' => $jsXfbml
-    )) ?>
+  FB.init({
+    appId: '<?php echo $apiKey ?>',
+    status: <?php echo ($jsStatus ? 'true' : 'false') ?>,
+    cookie: <?php echo ($jsCookie ? 'true' : 'false') ?>,
+    xfbml: <?php echo ($jsXfbml ? 'true' : 'false') ?>
+  });
 <?php end_javascript_tag();

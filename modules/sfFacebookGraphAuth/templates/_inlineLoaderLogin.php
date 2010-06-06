@@ -1,10 +1,8 @@
 <?php
 /**
- * Facebook inline loader login code
+ * Facebook login handling
  */
 ?>
-FB.init({appId: '<?php echo $apiKey ?>', status: <?php echo ($jsStatus ? 'true' : 'false') ?>,
-  cookie: <?php echo ($jsCookie ? 'true' : 'false') ?>, xfbml: <?php echo ($jsXfbml ? 'true' : 'false') ?>});
 <?php if ($redirectOnNoSession) : ?>
 FB.Event.subscribe('auth.sessionChange', function(response) {
   if (response.session) {

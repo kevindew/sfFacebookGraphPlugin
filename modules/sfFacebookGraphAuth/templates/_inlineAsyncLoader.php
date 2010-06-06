@@ -5,17 +5,17 @@
 ?>
 <div id="fb-root"></div>
 <?php javascript_tag(); ?>
-  window.fbAsyncInit = function() {
-    <?php include_partial('sfFacebookGraphAuth/inlineLoaderLogin', array(
-      'signInUrl' => $signInUrl,
-      'noSessionUrl' => $noSessionUrl,
-      'redirectOnNoSession' => $redirectOnNoSession,
-      'apiKey' => $apiKey,
-      'jsStatus' => $jsStatus,
-      'jsCookie' => $jsCookie,
-      'jsXfbml' => $jsXfbml
-    )) ?>
-  };
+  if (typeof fbAsyncInit == 'undefined') {
+    fbAsyncInit = new AsyncFunction();
+  }
+  fbAsyncInit.addMethod(function() {
+    FB.init({
+      appId: '<?php echo $apiKey ?>',
+      status: <?php echo ($jsStatus ? 'true' : 'false') ?>,
+      cookie: <?php echo ($jsCookie ? 'true' : 'false') ?>,
+      xfbml: <?php echo ($jsXfbml ? 'true' : 'false') ?>
+    });
+  }, true);
   (function() {
     var e = document.createElement('script');
     e.async = true;
