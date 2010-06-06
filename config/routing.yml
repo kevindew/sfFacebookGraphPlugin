@@ -10,6 +10,12 @@ sfFacebookGraphDemo:
     module: sfFacebookGraphDemo
     action: index
 
+sfFacebookGraphAsyncDemo:
+  url:  /facebook/demo/async
+  param:
+    module: sfFacebookGraphDemo
+    action: async
+
 #sfFacebookGraphAjaxSignin:
 #  url:  /facebook/ajax-signin
 #  param:
