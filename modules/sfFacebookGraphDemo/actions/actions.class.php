@@ -6,4 +6,9 @@ class sfFacebookGraphDemoActions extends sfActions
   {
     $this->setLayout(false);
   }
+
+  public function executeAsync($request)
+  {
+    $this->setLayout(false);
+  }
 }
