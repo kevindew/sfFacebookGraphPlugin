@@ -82,51 +82,26 @@ function include_facebook_permissions($perms = null)
 }
 
 /**
+ * Include an asynchronous facebook loader. Publish assets must be loaded to use
+ * this.
  *
- * @param <type> $signInUrl
- * @param <type> $noSessionUrl
- * @param <type> $redirectOnNoSession
+ * @param   array $options
+ * @return  void
  */
-function include_facebook_inline_async_loader(array $options = array(
-  'signInUrl' => null,
-  'noSessionUrl' => null,
-  'redirectOnNoSession' => null,
-  'locale' => null,
-  'partial' => 'sfFacebookGraphAuth/inlineAsyncLoader'
-)) {
-  
-  if ($options['signInUrl'] === null) {
-    $options['signInUrl'] = sfConfig::get(
-      'app_facebook_connect_signin_url',
-      'sfFacebookGraphAuth/signin'
-    );
-  }
+function include_facebook_inline_async_loader(
+  $locale = null,
+  $partial = 'sfFacebookGraphAuth/inlineAsyncLoader'
+)
+{
 
-  if ($options['noSessionUrl'] === null) {
-    $options['noSessionUrl'] = sfConfig::get(
-      'app_facebook_no_session_redirect_url',
-      null
-    );
-  }
-
-  if ($options['redirectOnNoSession'] === null) {
-    $options['redirectOnNoSession'] = sfConfig::get(
-      'app_facebook_redirect_on_no_session',
-      true
-    );
-  }
-
-  if ($options['locale'] === null) {
-    $options['locale'] = sfConfig::get('app_facebook_default_locale', 'en_US');
+  if ($locale === null) {
+    $locale = sfConfig::get('app_facebook_default_locale', 'en_US');
   }
 
   include_partial(
-    $options['partial'],
+    $partial,
     array(
-      'signInUrl' => $options['signInUrl'],
-      'noSessionUrl' => $options['noSessionUrl'],
-      'redirectOnNoSession' => $options['redirectOnNoSession'],
-      'locale' => $options['locale'],
+      'locale' => $locale,
       'apiKey' => sfConfig::get('app_facebook_api_key'),
       'jsStatus' => sfConfig::get('app_facebook_js_status', true),
       'jsCookie' => sfConfig::get('app_facebook_app_cookie', true),
@@ -135,13 +110,50 @@ function include_facebook_inline_async_loader(array $options = array(
   );
 }
 
-function include_facebook_inline_loader(array $options = array(
-  'signInUrl' => null,
-  'noSessionUrl' => null,
-  'redirectOnNoSession' => null,
-  'locale' => null,
-  'partial' => 'sfFacebookGraphAuth/inlineLoader'
-)) {
+/**
+ * Include an synchronous facebook loader. (poorer performance than asyncronous
+ * but simpler to code for)
+ *
+ * @param   array $options
+ * @return  void
+ */
+function include_facebook_inline_loader(
+  $locale = null,
+  $partial = 'sfFacebookGraphAuth/inlineLoader'
+)
+{
+  if ($locale === null) {
+    $locale = sfConfig::get('app_facebook_default_locale', 'en_US');
+  }
+
+  include_partial(
+    $partial,
+    array(
+      'locale' => $locale,
+      'apiKey' => sfConfig::get('app_facebook_api_key'),
+      'jsStatus' => sfConfig::get('app_facebook_js_status', true),
+      'jsCookie' => sfConfig::get('app_facebook_app_cookie', true),
+      'jsXfbml' => sfConfig::get('app_facebook_js_xfbml', true)
+    )
+  );
+}
+
+/**
+ *
+ * @param array $options  These can be
+ *                        * signInUrlu
+ */
+function include_facebook_login_javascript(array $options = array())
+{
+  $defaultOptions = array(
+    'signInUrl' => null,
+    'noSessionUrl' => null,
+    'redirectOnNoSession' => null,
+    'includeJavascriptTags' => true,
+    'partial' => 'sfFacebookGraphAuth/inlineLogin'
+  );
+
+  $options = array_merge($defaultOptions, $options);
 
   if ($options['signInUrl'] === null) {
     $options['signInUrl'] = sfConfig::get(
@@ -164,8 +176,8 @@ function include_facebook_inline_loader(array $options = array(
     );
   }
 
-  if ($options['locale'] === null) {
-    $options['locale'] = sfConfig::get('app_facebook_default_locale', 'en_US');
+  if ($options['includeJavascriptTags']) {
+    javascript_tag();
   }
 
   include_partial(
@@ -173,12 +185,11 @@ function include_facebook_inline_loader(array $options = array(
     array(
       'signInUrl' => $options['signInUrl'],
       'noSessionUrl' => $options['noSessionUrl'],
-      'redirectOnNoSession' => $options['redirectOnNoSession'],
-      'locale' => $options['locale'],
-      'apiKey' => sfConfig::get('app_facebook_api_key'),
-      'jsStatus' => sfConfig::get('app_facebook_js_status', true),
-      'jsCookie' => sfConfig::get('app_facebook_app_cookie', true),
-      'jsXfbml' => sfConfig::get('app_facebook_js_xfbml', true)
+      'redirectOnNoSession' => $options['redirectOnNoSession']
     )
   );
+
+  if ($options['includeJavascriptTags']) {
+    end_javascript_tag();
+  }
 }
