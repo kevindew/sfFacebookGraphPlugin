@@ -26,6 +26,7 @@ class sfFacebookGraphUser extends sfGuardSecurityUser
     
     
     if ($sfGuardUser
+     && $sfGuardUser->getProfile()
      && $facebookUid == $sfGuardUser->getProfile()->getFacebookUid()
     ) {
       return $facebookUid;
