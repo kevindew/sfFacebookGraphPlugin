@@ -5,11 +5,14 @@ sfFacebookGraphUserProfile:
   columns:
     user_id:
       type: integer
-      primary: true
+      unique: true
+      # this seems to cause problems on imports
+      #primary: true
+      notnull: true
     full_name: varchar(255)
     user_set_name:
       type: boolean
-      default: false
+      default: true
       notnull: true
     facebook_uid: integer(20)
     access_token: varchar(255)
@@ -19,7 +22,7 @@ sfFacebookGraphUserProfile:
       notnull: true
     facebook_only_account:
       type: boolean
-      default: false
+      default: true
       notnull: true
   relations:
     sfGuardUser:
@@ -38,12 +41,4 @@ sfGuardUser:
     email_address:
       unique: true
       notnull: false
-  relations:
-    sfFacebookGraphUserProfile:
-      alias: Profile
-      foreignType: one
-      foreignAlias: User
-      local: id
-      foreign: user_id
-      onDelete: CASCADE
 <?php endif; ?>
