@@ -48,7 +48,11 @@ class sfFacebookGraphUser extends sfGuardSecurityUser
 
       // we'll guess the default off whether they have a facebook uid in their
       // profile
-      $default = $user ? (bool) $user->getProfile()->getFacebookUid() : false;
+      
+      $default = $user && $user->getProfile()
+        ? (bool) $user->getProfile()->getFacebookUid()
+        : false
+      ;
     }
 
     return $this->getAttribute(
