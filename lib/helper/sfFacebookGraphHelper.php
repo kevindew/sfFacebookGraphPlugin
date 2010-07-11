@@ -147,7 +147,9 @@ function include_facebook_login_javascript(array $options = array())
 {
   $defaultOptions = array(
     'signInUrl' => null,
+    'signInUrlRaw' => null,
     'noSessionUrl' => null,
+    'noSessionUrlRaw' => null,
     'redirectOnNoSession' => null,
     'includeJavascriptTags' => true,
     'partial' => 'sfFacebookGraphAuth/inlineLogin'
@@ -155,18 +157,30 @@ function include_facebook_login_javascript(array $options = array())
 
   $options = array_merge($defaultOptions, $options);
 
-  if ($options['signInUrl'] === null) {
+  if ($options['signInUrlRaw'] === null) {
     $options['signInUrl'] = sfConfig::get(
       'app_facebook_connect_signin_url',
       'sfFacebookGraphAuth/signin'
     );
+
+    if ($options['signInUrl']) {
+      $options['signInUrl'] = url_for($options['signInUrl']);
+    }
+  } else {
+    $options['signInUrl'] = $options['signInUrlRaw'];
   }
 
-  if ($options['noSessionUrl'] === null) {
+  if ($options['noSessionUrlRaw'] === null) {
     $options['noSessionUrl'] = sfConfig::get(
       'app_facebook_no_session_redirect_url',
       null
     );
+
+    if ($options['noSessionUrl']) {
+      $options['noSessionUrl'] = url_for($options['noSessionUrl']);
+    }
+  } else {
+    $options['noSessionUrl'] = $options['noSessionUrlRaw'];
   }
 
   if ($options['redirectOnNoSession'] === null) {
