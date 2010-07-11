@@ -22,7 +22,7 @@ sfFacebookGraphUserProfile:
       notnull: true
     facebook_only_account:
       type: boolean
-      default: true
+      default: false
       notnull: true
   relations:
     sfGuardUser:
