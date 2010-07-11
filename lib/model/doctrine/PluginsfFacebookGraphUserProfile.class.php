@@ -12,6 +12,8 @@
 abstract class PluginsfFacebookGraphUserProfile
 extends BasesfFacebookGraphUserProfile
 {
+  protected $_newUser = false;
+
   /**
    * Create a user for a Facebook account
    *
@@ -43,6 +45,9 @@ extends BasesfFacebookGraphUserProfile
       $sfGuardUser
         ->getProfile()
         ->setFacebookOnlyAccount(true)
+        ->setUserSetName(false)
+        ->setNewUser(true)
+        ->setUserSetEmailAddress(false)
         ->_connectToFacebook(
           $facebookUid,
           $accessToken,
@@ -379,5 +384,28 @@ extends BasesfFacebookGraphUserProfile
   public function getFacebookLogoutUrl()
   {
     return sfFacebookGraph::getFacebookPlatform()->getLogoutUrl();
+  }
+
+  /**
+   * Get whether or not a new user has been registered
+   *
+   * @return  bool
+   */
+  public function getNewUser()
+  {
+    return $this->_newUser;
+  }
+
+  /**
+   * Get whether or not a new user has been registered
+   *
+   * @param   bool
+   * @return  self
+   */
+  public function setNewUser($newUser)
+  {
+    $this->_newUser = $newUser;
+
+    return $this;
   }
 }
