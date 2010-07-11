@@ -6,10 +6,14 @@
 <?php if ($redirectOnNoSession) : ?>
 FB.Event.subscribe('auth.sessionChange', function(response) {
   if (response.session) {
-    window.location = '<?php echo url_for($signInUrl) ?>';
+    <?php if ($signInUrl) : ?>
+    window.location = '<?php echo $signInUrl ?>';
+    <?php else : ?>
+    document.location.reload();
+    <?php endif; ?>
   } else {
     <?php if ($noSessionUrl) : ?>
-    window.location = '<?php echo url_for($noSessionUrl) ?>';
+    window.location = '<?php echo $noSessionUrl ?>';
     <?php else : ?>
     document.location.reload();
     <?php endif; ?>
@@ -17,6 +21,10 @@ FB.Event.subscribe('auth.sessionChange', function(response) {
 });
 <?php else : ?>
 FB.Event.subscribe('auth.login', function(response) {
-  window.location = '<?php echo url_for($signInUrl) ?>';
+  <?php if ($signInUrl) : ?>
+  window.location = '<?php echo $signInUrl ?>';
+  <?php else : ?>
+  document.location.reload();
+  <?php endif; ?>
 });
 <?php endif; ?>
