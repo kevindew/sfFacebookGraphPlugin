@@ -24,7 +24,7 @@ class sfFacebookGraphLoginStatusFilter extends sfFilter
     }
 
     // check for logged out
-    if ($user->isFacebookAuthenticated()
+    if ($user->isFacebookAuthenticated(false)
       && !$user->isFacebookConnected()) {
       $user->signOut();
     }
