@@ -12,7 +12,19 @@
 abstract class PluginsfFacebookGraphUserProfile
 extends BasesfFacebookGraphUserProfile
 {
+  /**
+   * Whether a user has just registered via facebook
+   *
+   * @var   boolean
+   */
   protected $_newUser = false;
+
+  /**
+   * Whether a user has just connected with facebook
+   *
+   * @var   boolean
+   */
+  protected $_newlyConnected = false;
 
   /**
    * Create a user for a Facebook account
@@ -54,7 +66,8 @@ extends BasesfFacebookGraphUserProfile
           $accessTokenExpiry,
           $facebookUserInfo,
           $sfGuardUser
-        );
+        )
+      ;
 
       $connection->commit();
 
@@ -91,19 +104,62 @@ extends BasesfFacebookGraphUserProfile
     $accessToken = sfFacebookGraph::getCurrentAccessToken();
     $accessTokenExpiry = sfFacebookGraph::getCurrentAccessExpiry();
 
-    if ($user->isAuthenticated()) {
-
-      if ($user->isFacebookConnected()) {
-
-        // user already signed in
-        $user->getProfile()->_facebookUpdateProfile(
+    // user signed in and facebook connected
+    if ($user->isAuthenticated() && $user->isFacebookConnected())
+    {
+      $user
+        ->getProfile()
+        ->_facebookUpdateProfile(
           $accessToken,
           $accessTokenExpiry,
           $facebookUserInfo,
           $user->getGuardUser()
-        );
+        )
+      ;
 
-      } else if($user->getProfile()->getFacebookUid() === null) {
+      return $user;
+    }
+
+    // get user object
+
+    // email to find facebook user
+    $email = isset($facebookUserInfo['email'])
+      ? $facebookUserInfo['email']
+      : ''
+    ;
+
+    if (sfConfig::get('app_facebook_dont_store_proxy_emails', false))
+    {
+      if (sfFacebookGraph::checkProxyEmail($email))
+      {
+        $email = null;
+      }
+    }
+
+    $userObj = self::getUserByFacebookCredentials($facebookUid, $email);
+
+    if ($user->isAuthenticated()) {
+
+      if ($user === $userObj) {
+
+        $newlyConnected = $user->getProfile()->getFacebookUid() === null;
+
+        // user already signed in
+        $user
+          ->getProfile()
+          ->_connectToFacebook(
+            $facebookUid,
+            $accessToken,
+            $accessTokenExpiry,
+            $facebookUserInfo,
+            $user->getGuardUser()
+          )
+          ->setNewlyConnected($newlyConnected)
+        ;
+
+        return $user;
+
+      } else if(!$userObj) {
 
         // user account exists but not connected to facebook
         $user
@@ -114,11 +170,15 @@ extends BasesfFacebookGraphUserProfile
             $accessTokenExpiry,
             $facebookUserInfo,
             $user->getGuardUser()
-          );
+          )
+          ->setNewlyConnected(true)
+        ;
+
+        return $user;
 
       } else {
 
-        // user connected to different facebook account
+        // user has a different facebook account
 
         // sign them out (we'll try sign them in again)
         $user->signOut();
@@ -126,78 +186,61 @@ extends BasesfFacebookGraphUserProfile
       }
     }
 
-    // check if user exists
-    if ($user->isAnonymous()) {
-      $userObj = self::getUserByFacebookUid($facebookUid);
+    // user exists
+    if ($userObj)
+    {
+      $newlyConnected = $userObj->getProfile()->getFacebookUid() === null;
 
-      if ($userObj) {
-        $user->signIn($userObj, false, null, true);
-      }
-    }
-
-    // check if a user with the username exists
-    if ($user->isAnonymous()) {
-      $userObj = self::getUserByFacebookUsername($facebookUid);
-
-      if ( !$userObj) {
-        // check by email address
-        $email = isset($facebookUserInfo['email'])
-          ? $facebookUserInfo['email']
-          : '';
-
-        if (sfConfig::get('app_facebook_dont_store_proxy_emails', false)) {
-          if (sfFacebookGraph::checkProxyEmail($email)) {
-            $email = '';
-          }
-        }
-        
-        $userObj = self::getUserByEmail($email);
-      }
-
-      if ($userObj) {
-
-        if (!$userObj->getProfile()) {
-          // profile is null
-          $profileClass = sfConfig::get(
-            'app_facebook_profile_class',
-            'sfFacebookGraphUserProfile'
-          );
-          $profile = new $profileClass();
-          $profile->setUser($userObj);
-          $userObj->setProfile($profile);
-        }
-
-        $userObj
-          ->getProfile()
-          ->_connectToFacebook(
-            $facebookUid,
-            $accessToken,
-            $accessTokenExpiry,
-            $facebookUserInfo,
-            $userObj
-          );
-        $user->signIn($userObj, false, null, true);
-      }
-    }
-
-    // if nothing exists create a new account
-    if ($user->isAnonymous()) {
-      try {
-
-        $user->signIn(self::createUser(
+      $userObj
+        ->getProfile()
+        ->_connectToFacebook(
           $facebookUid,
           $accessToken,
           $accessTokenExpiry,
-          $facebookUserInfo
-        ), false, null, true
-        );
+          $facebookUserInfo,
+          $userObj
+        )
+        ->setNewlyConnected($newlyConnected)
+      ;
+      $user->signIn($userObj, false, null, true);
+      return $user;
+    }
 
-      } catch (Exception $e) {
-        throw $e;
-      }
+    try
+    {
+      // create new user
+      $user
+        ->signIn(
+          self::createUser(
+            $facebookUid,
+            $accessToken,
+            $accessTokenExpiry,
+            $facebookUserInfo
+          ), false, null, true
+        )
+      ;
+
+    }
+    catch (Exception $e)
+    {
+      throw $e;
     }
 
     return $user;
+  }
+
+
+  static public function getUserByFacebookCredentials($facebookUid, $email)
+  {
+    $userObj = self::getUserByFacebookUid($facebookUid);
+
+    if (!$userObj && $email) {
+      // check by email address
+
+      $userObj = self::getUserByEmail($email);
+    }
+
+    return $userObj;
   }
 
   /**
@@ -224,13 +267,11 @@ extends BasesfFacebookGraphUserProfile
   static public function getUserByFacebookUsername($facebookUid)
   {
     return Doctrine::getTable('sfGuardUser')
-                   ->createQuery('u')
-                   ->leftJoin('u.Profile p')
-                   ->where(
-                     'u.username = ?',
-                     self::generateFacebookUsername($facebookUid)
-                   )
-                   ->fetchOne();
+      ->createQuery('u')
+      ->leftJoin('u.Profile p')
+      ->where('u.username = ?', self::generateFacebookUsername($facebookUid))
+      ->fetchOne()
+    ;
   }
 
   /**
@@ -241,17 +282,17 @@ extends BasesfFacebookGraphUserProfile
    */
   static public function getUserByEmail($email)
   {
-    if (!$email) {
+    if (!$email)
+    {
       return false;
     }
 
     return Doctrine::getTable('sfGuardUser')
-                   ->createQuery('u')
-                   ->leftJoin('u.Profile p')
-                   ->where(
-                     'u.email_address = ?', $email
-                   )
-                   ->fetchOne();
+      ->createQuery('u')
+      ->leftJoin('u.Profile p')
+      ->where('u.email_address = ?', $email)
+      ->fetchOne()
+    ;
   }
 
   /**
@@ -276,7 +317,8 @@ extends BasesfFacebookGraphUserProfile
       ->setFacebookUid($facebookUid)
       ->_facebookUpdateProfile(
         $accessToken, $accessTokenExpiry, $facebookUserInfo, $user
-      );
+      )
+    ;
 
     return $this;
   }
@@ -297,7 +339,8 @@ extends BasesfFacebookGraphUserProfile
     $this
       ->setActiveAccessToken($accessToken, $accessTokenExpiry)
       ->mergeFacebookInfo($facebookUserInfo, $user)
-      ->save();
+      ->save()
+    ;
 
     return $this;
   }
@@ -379,11 +422,20 @@ extends BasesfFacebookGraphUserProfile
   /**
    * Get Facebook logout url for user
    *
+   * @param   string $redirect
+   *
    * @return  string
    */
-  public function getFacebookLogoutUrl()
+  public function getFacebookLogoutUrl($redirect = '')
   {
-    return sfFacebookGraph::getFacebookPlatform()->getLogoutUrl();
+    $params = array();
+
+    if ($redirect)
+    {
+      $params['next'] = $redirect;
+    }
+
+    return sfFacebookGraph::getFacebookPlatform()->getLogoutUrl($params);
   }
 
   /**
@@ -397,14 +449,37 @@ extends BasesfFacebookGraphUserProfile
   }
 
   /**
-   * Get whether or not a new user has been registered
+   * Set whether or not a new user has been registered
    *
-   * @param   bool
+   * @param   bool  $newUser
    * @return  self
    */
   public function setNewUser($newUser)
   {
     $this->_newUser = $newUser;
+
+    return $this;
+  }
+
+  /**
+   * Get whether or not a user has just connected with facebook
+   *
+   * @return  bool
+   */
+  public function getNewlyConnected()
+  {
+    return $this->_newlyConnected;
+  }
+
+  /**
+   * Set whether or not a user has just connected with facebook
+   *
+   * @param   bool  $newlyConnected
+   * @return  self
+   */
+  public function setNewlyConnected($newlyConnected)
+  {
+    $this->_newlyConnected = $newlyConnected;
 
     return $this;
   }
